@@ -1,7 +1,8 @@
 package models
 
+import "gorm.io/gorm"
 type Note struct {
-	ID      int    `json:"id"`
+	gorm.Model
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }

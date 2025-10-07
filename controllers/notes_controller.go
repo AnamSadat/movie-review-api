@@ -4,15 +4,15 @@ import (
 	"net/http"
 	"strconv"
 
+	"mytest/config"
 	"mytest/models"
 
 	"github.com/gin-gonic/gin"
 )
 
-var notes = []models.Note{}
-var nextID = 1
-
 func GetNotes(ctx *gin.Context) {
+	var notes []models.Note
+	config.DB.Find(&notes)
 	ctx.JSON(http.StatusOK, notes)
 }
 
@@ -22,38 +22,27 @@ func CreateNote(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	newNote.ID = nextID
-	nextID++
-	notes = append(notes, newNote)
-
+	config.DB.Create(&newNote)
 	ctx.JSON(http.StatusCreated, newNote)
 }
 
 func GetNoteById(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
-
-	for _, note := range notes {
-		if (note.ID == id) {
-			ctx.JSON(http.StatusOK, note)
-			return
-		}
+	var note models.Note
+	if err := config.DB.First(&note, id).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"message": "Note not found"})
+		return
 	}
-
-	ctx.JSON(http.StatusNotFound, gin.H{"message": "Note not found"})
+	ctx.JSON(http.StatusOK, note)
 }
 
 func DeleteNote(ctx *gin.Context) {
 	id, _ := strconv.Atoi(ctx.Param("id"))
-
-	for i, note := range notes {
-		if note.ID == id {
-			notes = append(notes[:1], notes[i+1:]...)
-			ctx.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
-			return
-		}
+	var note models.Note
+	if err := config.DB.First(&note, id).Error; err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"message": "Note not found"})
+		return
 	}
-
-	ctx.JSON(http.StatusNotFound, gin.H{"message": "Note not found"})
-
+	config.DB.Delete(&note)
+	ctx.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
 }
