@@ -43,6 +43,6 @@ func DeleteNote(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"message": "Note not found"})
 		return
 	}
-	config.DB.Delete(&note)
+	config.DB.Unscoped().Delete(&note)
 	ctx.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
 }
